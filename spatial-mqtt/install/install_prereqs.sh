@@ -12,13 +12,10 @@ fi
 # Update package and install lists
 sudo apt-get update
 sudo apt-get install -y git wget flex bison gperf python3 python3-venv cmake ninja-build ccache libffi-dev dfu-util libusb-1.0-0
-sudo apt-get install -y nodejs npm
+
 
 # Update Node
-sudo npm install -g n
-echo "Updating Node to version 20.6.1..."
-sudo n 20.6.1
-hash -r
+$HOME/spatial-mqtt/install/install_update_node.sh
 
 # Make directories
 mkdir -p $HOME/esp &
