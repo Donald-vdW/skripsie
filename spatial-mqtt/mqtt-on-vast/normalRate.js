@@ -22,6 +22,7 @@ let _defaultOpts = {
 
 let subscriptions = []
 let publications = []
+let doTest = false
 
 let pubCount = 0
 let subCount = 0
@@ -31,12 +32,12 @@ client.on(`connect`,
         _recordEvent(Client_Event.CLIENT_JOIN, _defaultOpts)
         client.subscribe(`Test`)
         console.log(`Connected to the MQTT broker: ${client.options.hostname}`)
-        generateRandom(global.SUBSCRIBE,1)
-        generateRandom(global.PUBLISH,5-subscriptions.length)
-        console.log(subscriptions)
-        subscriptions.forEach(sub => {
-            spSubscribe(sub.subscription, sub.subID)
+
+        subscriptions.push({
+            subscription:{x: 100, y: 100, radius: 50, channel: `channel1`}, 
+            subID: 0
         })
+        spSubscribe(subscriptions[0].subscription, `${clientID}-sub${0}`)
     }
 )
 
@@ -45,7 +46,7 @@ client.on(`packetreceive`, function(packet) {
     switch(packet.cmd){
         case "publish":{
             if(isSpatial(packet.topic)){
-                console.log(packet)
+                // console.log(packet)
                 let eventPayload = {
                     ..._defaultOpts,
                     packet: packet
@@ -122,25 +123,6 @@ client.on(`packetsend`, function(packet){
     }
 })
 
-client.on(`end`, function(){
-    // console.log(`Disconected from Client`)
-})
-
-client.on(`reconnect`, function(){
-    // console.log(`Reconnecting to the MQTT broker`)
-})
-
-client.on(`close`, function(){
-    // console.log(`Disconnected from the MQTT broker: ${client.options.hostname}`)
-})
-
-client.on(`disconnect`, function(packet){
-    // console.log(`Received disconnect packet: `, packet)
-})
-
-client.on(`offline`, function(){
-    // console.log(`Client is offline`)
-})
 
 client.on(`error`, function(err){
     console.error(`An error occurred: `, err)
@@ -151,20 +133,26 @@ client.on(`message`,
         if(message.toString() === `Start Test` && topic === `Test`){
             console.log(`STARTING...`)
             _recordEvent(Client_Event.START_TEST, _defaultOpts)
+            doTest = true
             handleCommands()
         }
 
         if(message.toString() === `End Test` && topic === `Test`){
+            doTest = false
+            client.end()
+
             console.log(`Ending...`)
+            // console.log(`Subscriptions: `, subscriptions)            
             _recordEvent(Client_Event.END_TEST, _defaultOpts)
-            endClient()
+            _recordEvent(Client_Event.CLIENT_LEAVE, _defaultOpts)
+
             await delay(5000)
             process.exit(0)
         }
 })
 
 function spSubscribe(subscription, subID) {
-    subID = subID || `${clientID}-sub${++subCount}` // If no subID is provided, subscribe with a new subID
+    subID = subID || `${clientID}-sub${subCount++}` // If no subID is provided, subscribe with a new subID
     client.subscribe(`sp: <${JSON.stringify(subscription)}> subID: <${subID}>`)
 }
 
@@ -173,8 +161,8 @@ function spPublish(publication, pubID, msg) {
 }
 
 function spUnsub(subscription, subID) {
-    subID = subID || `${clientID}-sub${subCount}` // If no subID is provided, unsubscribe from the latest subscription
-    client.unsubscribe(`sp: <${JSON.stringify(subscription)}> subID: <${subID}>`)
+    ID = subID || `${clientID}-sub${subCount-1}` // If no subID is provided, unsubscribe from the latest subscription
+    client.unsubscribe(`sp: <${JSON.stringify(subscription)}> subID: <${ID}>`)
 }
 
 function delay(ms) {
@@ -185,19 +173,19 @@ function isSpatial(topic){
     return topic.startsWith('sp:')
 }
 
+let intervalId;  // Hold the reference to the interval
 function handleCommands(){
-    subscriptions.forEach((sub) => {
-        let pub = {
-            publication : sub.subscription,
-            pubID: `${clientID}-pub${++pubCount}`
+    intervalId = setInterval(() => {
+        if (!doTest) {
+            clearInterval(intervalId);  // Stop if doTest is false
+            // spUnsub(subscriptions[0].subscription, subscriptions[0].subID)
+            return;
         }
-        publications.push(pub)
-    })
 
-    publications.forEach((pub) => {
-        spPublish(pub.publication, pub.pubID, `Random String ${pub.pubID}`)
-    })
+        spPublish(subscriptions[0].subscription, `${clientID}-pub${pubCount}`, `Random String ${pubCount}`);
+        pubCount++;
 
+    }, 1);  // Adjust the interval duration as needed
     
 }
 
@@ -212,7 +200,7 @@ function generateRandom(event, numOfEvents) {
                         radius: Math.random() * 50,
                         channel: `channel${Math.floor(Math.random() * 3) + 1}`
                     },
-                    subID: `${clientID}-sub${++subCount}`
+                    subID: `${clientID}-sub${subCount++}`
                 }
                 subscriptions.push(sub)
             }
@@ -226,7 +214,7 @@ function generateRandom(event, numOfEvents) {
                         radius: Math.random() * 50,
                         channel: `channel${Math.floor(Math.random() * 3) + 1}`
                     },
-                    pubID: `${clientID}-pub${++pubCount}`
+                    pubID: `${clientID}-pub${pubCount++}`
                 }
                 publications.push(pub)
             }

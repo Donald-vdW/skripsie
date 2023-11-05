@@ -1,6 +1,6 @@
 // define log if not defined
 global.VISUALISE_DEBUG_LOGS = false;
-global.BROKER = 'localhost'
+// global.BROKER = 'localhost'
 // global.BROKER = '127.0.1.1'
 // global.BROKER = '192.168.1.53' //pi53
 // global.BROKER = '192.168.1.216'
