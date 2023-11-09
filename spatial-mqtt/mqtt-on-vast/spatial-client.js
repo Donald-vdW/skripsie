@@ -9,7 +9,7 @@ const mqtt = require('mqtt')
 const client = mqtt.connect(`mqtt://${BROKER}:${PORT}`)
 
 const clientID = client.options.clientId
-const _alias = `C1` //DO NOT CHANGE THIS
+const _alias = `C90` //DO NOT CHANGE THIS
 
 let _pos =      {x: 80, y: 80}
 

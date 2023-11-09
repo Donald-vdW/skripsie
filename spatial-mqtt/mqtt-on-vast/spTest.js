@@ -21,7 +21,8 @@ setTimeout(
         client.end()
         process.exit(0)
     },
-    10000
+    360000
+    // 2000
 )
 
 startTest()

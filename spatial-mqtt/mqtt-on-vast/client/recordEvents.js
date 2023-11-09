@@ -59,7 +59,7 @@ exports._recordEvent = function(event, msg){
         }
 
         case Client_Event.PUB :{
-            console.log(performance.now())
+            // console.log(performance.now())
             // let aoi = new VAST.area(new VAST.pos(msg.pub.x, msg.pub.y), msg.pub.radius);
             let topic = splitPubTopic(msg.topic)
             let pub = {

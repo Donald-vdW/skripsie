@@ -9,7 +9,7 @@ const mqtt = require('mqtt')
 const client = mqtt.connect(`mqtt://${BROKER}:${PORT}`)
 
 const clientID = client.options.clientId
-const _alias = `C1` //DO NOT CHANGE THIS
+const _alias = `C90` //DO NOT CHANGE THIS
 
 let _pos =      {x: 80, y: 80}
 
@@ -27,17 +27,27 @@ let doTest = false
 let pubCount = 0
 let subCount = 0
 
+let sub1 = {x: 30,y: 30,radius: 20, channel: 'channel1'}
+let sub2 = {x: 100,y: 50,radius: 15, channel: 'channel1'}
+let sub3 = {x: 180,y: 30,radius: 25, channel: 'channel1'}
+let sub4 = {x: 50,y: 120,radius: 20, channel: 'channel1'}
+let sub5 = {x: 150,y: 120,radius: 20, channel: 'channel1'}
+let sub6 = {x: 30,y: 200,radius: 15, channel: 'channel1'}
+let sub7 = {x: 100,y: 220,radius: 15, channel: 'channel1'}
+let sub8 = {x: 180,y: 200,radius: 25, channel: 'channel1'}
+
+
 client.on(`connect`, 
     function(packet) {
         _recordEvent(Client_Event.CLIENT_JOIN, _defaultOpts)
         client.subscribe(`Test`)
         console.log(`Connected to the MQTT broker: ${client.options.hostname}`)
 
-        subscriptions.push({
-            subscription:{x: 100, y: 100, radius: 50, channel: `channel1`}, 
-            subID: 0
+        generateRandom(global.SUBSCRIBE,2)
+        subscriptions.forEach(sub => {
+            spSubscribe(sub.subscription, sub.subID)
         })
-        spSubscribe(subscriptions[0].subscription, `${clientID}-sub${0}`)
+        
     }
 )
 
@@ -56,19 +66,19 @@ client.on(`packetreceive`, function(packet) {
             break
         }
         case "suback":{
-            // console.log(`Subscribe acknowledged!`)
+            // console.log(`Write record event for suback`)
             break
         }
         case "unsuback":{
-            console.log(`Unsubscribe acknowledged!`)
+            // console.log(`Unsubscribe acknowledged!`)
             break
         }
         case "connack":{
-            // console.log(`Connection acknowledged!`)
+            // console.log(`Write record event for connack`)
             break
         }
         default:{
-            // console.log(`Recieved:\n`,packet)
+            console.log(`Write Record event for RECEIVING: `,packet.cmd)
             break
         }
     }
@@ -118,14 +128,15 @@ client.on(`packetsend`, function(packet){
             break
         }
         default: {
-            // console.log(packet)
+            console.log(`Write Record event for SENDING: `,packet.cmd)
         }
     }
 })
 
 
 client.on(`error`, function(err){
-    console.error(`An error occurred: `, err)
+    console.error(`An error occurred: `, err) 
+    //TODO: Write a record event for this
 })
 
 client.on(`message`, 
@@ -182,10 +193,18 @@ function handleCommands(){
             return;
         }
 
-        spPublish(subscriptions[0].subscription, `${clientID}-pub${pubCount}`, `Random String ${pubCount}`);
-        pubCount++;
+        let pub = {
+            publication:{
+                x: Math.random() * 255,
+                y: Math.random() * 255,
+                radius: Math.random() * 50,
+                channel: `channel${Math.floor(Math.random() * 3) + 1}`
+            },
+            pubID: `${clientID}-pub${pubCount++}`
+        }
+        spPublish(pub.publication,pub.pubID,"RandomString")
 
-    }, 1);  // Adjust the interval duration as needed
+    }, 50);  // Adjust the interval duration as needed
     
 }
 
@@ -236,4 +255,48 @@ async function endClient() {
     publications.forEach(pub =>{
         fs.appendFileSync('./visualise/publications.txt', `${pub.x},${pub.y},${pub.radius},${pub.channel}\n`)
     })
+}
+
+function multipleClientTest(){
+    if(_alias == 'C53') {
+        subscriptions.push({
+            subscription:sub1,
+            subID: `${clientID}-sub${0}`
+        })
+    } else if(_alias == 'C54'){
+        subscriptions.push({
+            subscription:sub2,
+            subID: `${clientID}-sub${0}`
+        })
+    } else if(_alias == 'C60'){
+        subscriptions.push({
+            subscription:sub3,
+            subID: `${clientID}-sub${0}`
+        })
+    } else if(_alias == 'C61'){
+        subscriptions.push({
+            subscription:sub4,
+            subID: `${clientID}-sub${0}`
+        })
+    } else if(_alias == 'C64'){
+        subscriptions.push({
+            subscription:sub5,
+            subID: `${clientID}-sub${0}`
+        })
+    } else if(_alias == 'C65'){
+        subscriptions.push({
+            subscription:sub6,
+            subID: `${clientID}-sub${0}`
+        })
+    } else if(_alias == 'C68'){
+        subscriptions.push({
+            subscription:sub7,
+            subID: `${clientID}-sub${0}`
+        })
+    } else if(_alias == 'C70'){
+        subscriptions.push({
+            subscription:sub8,
+            subID: `${clientID}-sub${0}`
+        })
+    }
 }
