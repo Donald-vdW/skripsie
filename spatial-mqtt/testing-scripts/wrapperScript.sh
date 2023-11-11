@@ -1,11 +1,33 @@
 #!/bin/bash
 
+# Check if BASE_DIR is already set
+if [ -z "$radius" ]; then
+    radius=25
+    echo "Radius was not set. Using default: $radius"
+else
+
+    echo "Using existing BASE_DIR: $radius"
+fi
+
 # The path to the original script
 SCRIPT_PATH="./run_and_retrieve.sh"
-label=$(date "+%Y-%m-%d_%H-%M-%S")
-BASE_DIR="/mnt/d/User/Documents/4th Year/Semester2/Skripsie/TESTS/2/${label}"
-mkdir -p "${BASE_DIR}"
 
+# Check if BASE_DIR is already set
+if [ -z "$BASE_DIR" ]; then
+
+    # BASE_DIR is not set, so define it with your default value
+    label=$(date "+%Y-%m-%d_%H-%M-%S")
+    BASE_DIR="/mnt/d/User/Documents/4th Year/Semester2/Skripsie/TESTS/2/${label}"
+    mkdir -p "${BASE_DIR}"
+
+    # BASE_DIR="/mnt/d/User/Documents/4th Year/Semester2/Skripsie/TESTS/2/2023-11-10_09-48-23"
+    echo "BASE_DIR was not set. Using default: $BASE_DIR"
+else
+
+    echo "Using existing BASE_DIR: $BASE_DIR"
+fi
+
+export radius
 export BASE_DIR
 
 # Array of all Raspberry Pi addresses
@@ -55,6 +77,6 @@ for (( i=1; i<=${#ALL_CLIENTS[@]}; i++ )); do
     sleep 5
 done
 
-# ../mqtt-on-vast/analysis/get_summaries.sh
+wait
 
-python3 ~/spatial-mqtt/mqtt-on-vast/analysis/extract_metrics.py "${BASE_DIR}"
+python3 ~/spatial-mqtt/mqtt-on-vast/analysis/extract_metrics.py "${BASE_DIR}" 

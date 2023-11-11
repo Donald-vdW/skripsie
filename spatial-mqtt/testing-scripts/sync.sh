@@ -32,7 +32,7 @@ for DEVICE in "${DEVICES[@]}"; do
     NUMBER=$(echo $DEVICE | cut -d'.' -f4)
 
     sed -i.bak "s/const _alias = \`C1\`/const _alias = \`C$NUMBER\`/" ~/spatial-mqtt/mqtt-on-vast/spatial-client.js
-    sed -i.bak "s/const _alias = \`C1\`/const _alias = \`C$NUMBER\`/" ~/spatial-mqtt/mqtt-on-vast/normalRate.js
+    sed -i.bak "s/const _alias = \`C1\`/const _alias = \`C$NUMBER\`/" ~/spatial-mqtt/mqtt-on-vast/normalRate.js 
     sed -i.bak "s/const _alias = \`C1\`/const _alias = \`C$NUMBER\`/" ~/spatial-mqtt/mqtt-on-vast/organised.js
 
     rsync -avz --delete --exclude='**/node_modules/' --exclude='**/logs_and_events/' ~/spatial-mqtt/mqtt-on-vast/ $DEVICE:~/spatial-mqtt/mqtt-on-vast/

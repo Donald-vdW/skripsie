@@ -32,15 +32,28 @@ fi
 
 # Check if BASE_DIR is already set
 if [ -z "$BASE_DIR" ]; then
+
     # BASE_DIR is not set, so define it with your default value
     # label=$(date "+%Y-%m-%d_%H-%M-%S")
-    # BASE_DIR="/mnt/d/User/Documents/4th Year/Semester2/Skripsie/TESTS/2/${label}"
+    label="2023-11-10_16-53-42"
+    BASE_DIR="/mnt/d/User/Documents/4th Year/Semester2/Skripsie/TESTS/2/${label}"
     # mkdir -p "${BASE_DIR}"
-    BASE_DIR="/mnt/d/User/Documents/4th Year/Semester2/Skripsie/TESTS/2/2023-11-10_00-30-09"
+
     echo "BASE_DIR was not set. Using default: $BASE_DIR"
 else
 
     echo "Using existing BASE_DIR: $BASE_DIR"
+fi
+
+# Check if radius is already set
+if [ -z "$radius" ]; then
+    radius=15
+    BASE_DIR="/mnt/d/User/Documents/4th Year/Semester2/Skripsie/TESTS/2/${label}/radius-${radius}"
+    mkdir -p "${BASE_DIR}"
+
+    echo "Radius was not set. Using default: $radius"
+else
+    echo "Using existing radius: $radius"
 fi
 
 BROKERS=(
@@ -68,7 +81,7 @@ for CLIENT in "${CLIENTS[@]}"; do
     echo "Starting node script on $CLIENT..."
     # ssh $CLIENT "cd ~/spatial-mqtt/mqtt-on-vast/ && rm -rf logs_and_events && nohup node normalRate.js > output.log 2> error.log" &
     # ssh $CLIENT "cd ~/spatial-mqtt/mqtt-on-vast/ && rm -rf logs_and_events && nohup node spatial-client.js > output.log 2> error.log" &
-    ssh $CLIENT "cd ~/spatial-mqtt/mqtt-on-vast/ && rm -rf logs_and_events && nohup node organised.js > output.log 2> error.log" &
+    ssh $CLIENT "cd ~/spatial-mqtt/mqtt-on-vast/ && rm -rf logs_and_events && nohup node organised.js $radius > output.log 2> error.log" &
 done
 
 sleep 2
@@ -133,7 +146,7 @@ rsync -avz ~/spatial-mqtt/mqtt-on-vast/logs_and_events/Client_events.txt "${FILE
 OUTPUT_FILE="${BASE_DIR}/Output_${NUM_CLIENTS}.txt"
 
 # Run the python script with the constructed filename and redirect output
-python3 ~/spatial-mqtt/mqtt-on-vast/analysis/fromScratch.py "$FILE_NAME" > "$OUTPUT_FILE"
+python3 ~/spatial-mqtt/mqtt-on-vast/analysis/fromScratch.py "$FILE_NAME" > "$OUTPUT_FILE" &
 
 # Inform the user that the operation is complete for this file
 echo "Processed $FILE_NAME and saved output to $OUTPUT_FILE"
