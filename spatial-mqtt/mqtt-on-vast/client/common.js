@@ -28,7 +28,8 @@ global.Client_Event = {
     PUB :               9,
     RECEIVE_PUB:        10,
     START_TEST:         11,
-    END_TEST:           12
+    END_TEST:           12,
+    NON_SPATIAL_EVENT:  13,
 }
 
 global.Client_Event_Str = [

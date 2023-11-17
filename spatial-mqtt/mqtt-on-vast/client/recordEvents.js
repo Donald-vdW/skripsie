@@ -1,8 +1,17 @@
 require('./common')
+const fs = require('fs');
+
 // returns number of milliseconds since 1970
 let getTimestamp = function () {
     let now = new Date();
     return now.getTime();
+}
+
+function writeEventsToFile() {
+    if (allEvents.length>0) {
+        fs.writeFileSync('./logs_and_events/non_spatial_events.txt', allEvents.join('\n'), 'utf8');
+        return;
+    }
 }
 
 let allEvents = []
@@ -26,7 +35,7 @@ exports._recordEvent = function(event, msg){
         }
 
         case Client_Event.SUB_NEW :{
-            let subscription = splitSubTopic(msg.topic)
+            let subscription = splitSpatialSubTopic(msg.topic)
             let _sub = {
                 hostID: msg.matcher,
                 hostPos: {
@@ -61,7 +70,7 @@ exports._recordEvent = function(event, msg){
         case Client_Event.PUB :{
             // console.log(performance.now())
             // let aoi = new VAST.area(new VAST.pos(msg.pub.x, msg.pub.y), msg.pub.radius);
-            let topic = splitPubTopic(msg.topic)
+            let topic = splitSpatialpubTopic(msg.topic)
             let pub = {
                 pubID: topic.pubID,
                 aoi: {
@@ -88,7 +97,7 @@ exports._recordEvent = function(event, msg){
         }
 
         case Client_Event.SUB_DELETE :{
-            let subscription = splitSubTopic(msg.topic)
+            let subscription = splitSpatialSubTopic(msg.topic)
             let data = {
                 time : performance.now(),
                 event : event,
@@ -102,7 +111,7 @@ exports._recordEvent = function(event, msg){
         }
 
         case Client_Event.RECEIVE_PUB :{
-            let topic = splitPubNSubTopic(msg.packet.topic)
+            let topic = splitSpatialPubNSubTopic(msg.packet.topic)
             let _pub = {
                 matcherID: msg.matcher,
                 clientID:  msg.id,
@@ -145,6 +154,7 @@ exports._recordEvent = function(event, msg){
             let promises = allEvents.map(event => {
                 return new Promise((resolve, reject) => {
                     event['time'] -= startTime;
+                    writeEventsToFile();
                     events.printObject(event, (err) => {   // Assuming printObject uses a callback
                         if (err) {
                             reject(err);
@@ -188,18 +198,81 @@ exports._recordEvent = function(event, msg){
             }
             allEvents.push(data)
         }
-    //     case Client_Event.CLIENT_CONNECT :{
-    //       let data = {
-    //         time : performance.now(),
-    //         event : event,
-    //         id : _id,
-    //         alias : _alias,
-    //         pos: msg.pos,
-    //         matcher : _matcherID
-    //       }
-    //       events.printObject(data);
-    //       break
-    //     }
+
+        case Client_Event.NON_SPATIAL_EVENT:{
+            switch(msg.non_spatial_event){
+                case Client_Event.SUB_NEW :{
+
+                    let data = {
+                        time : performance.now(),
+                        event : event,
+                        non_spatial_event : msg.non_spatial_event,
+                        id : msg.id,
+                        alias : msg.alias,
+                        broker : msg.matcher,
+                        sub : msg.topic
+                    }
+                    allEvents.push(data);
+                    // console.log(allEvents)
+                    break
+                }
+
+                case Client_Event.SUB_DELETE :{
+                    console.log('SUB_DELETE')
+                    let data = {
+                        time : performance.now(),
+                        event : event,
+                        non_spatial_event : msg.non_spatial_event,
+                        id : msg.id,
+                        alias : msg.alias,
+                        broker: msg.matcher,
+                        topic: msg.topic
+                    }
+                    allEvents.push(data);
+                    // console.log(JSON.stringify(data))
+                    break
+                }
+
+                case Client_Event.PUB :{
+                    // console.log(msg)
+                    let data = {
+                        time : performance.now(),
+                        event : event,
+                        non_spatial_event : msg.non_spatial_event,
+                        id : msg.id,
+                        alias : msg.alias,
+                        broker: msg.matcher,
+                        topic: msg.topic,
+                        msg : getNormalPubID(msg.payload).msg,
+                        pubID : getNormalPubID(msg.payload).pubID
+                    }
+                    allEvents.push(data);
+                    // console.log(JSON.stringify(data))
+                    break
+                }
+
+                case Client_Event.RECEIVE_PUB :{
+                    console.log('RECEIVE_PUB')
+                    
+                    console.log(getNormalPubID(msg.packet.payload.toString()))
+        
+                    let data = {
+                        time : performance.now(),
+                        event : event,
+                        non_spatial_event : msg.non_spatial_event,
+                        id : msg.id,
+                        alias : msg.alias,
+                        broker: msg.matcher,
+                        topic: msg.packet.topic,
+                        pubID: getNormalPubID(msg.packet.payload.toString()).pubID,
+                        msg: getNormalPubID(msg.packet.payload.toString()).msg
+                    }
+
+                    allEvents.push(data)
+                    break
+                }
+            }
+        }
   
     //     case Client_Event.CLIENT_MOVE :{
     //       let data = {
@@ -252,7 +325,7 @@ function decode(encoded) {
     return { x, y, radius, channel };
 }
 
-function splitSubTopic(topic) {
+function splitSpatialSubTopic(topic) {
     const match = topic.match(/sp: <(.*?)> subID: <(.*?)>$/);
     const spatialData = match[1];
     const subscriptionID = match[2];
@@ -262,7 +335,7 @@ function splitSubTopic(topic) {
     }
 }
 
-function splitPubTopic(topic) {
+function splitSpatialpubTopic(topic) {
     const match = topic.match(/sp: <(.*?)> pubID: <(.*?)>$/);
     const spatialData = match[1];
     const publicationID = match[2];
@@ -272,7 +345,7 @@ function splitPubTopic(topic) {
     }
 }
 
-function splitPubNSubTopic(topic) {
+function splitSpatialPubNSubTopic(topic) {
     const match = topic.match(/sp: <(.*?)> pubID: <(.*?)> subID: <(.*?)>$/);
     const spatialData = match[1];
     const publicationID = match[2];
@@ -281,5 +354,16 @@ function splitPubNSubTopic(topic) {
         ...JSON.parse(spatialData),
         pubID: publicationID,
         subID: subscriptionID
+    }
+}
+
+// pubID: <mqttjs_b821af9d-pub0> msg: <This is a random message></This>
+function getNormalPubID(payload) {
+    const match = payload.match(/pubID: <(.*?)> msg: <(.*?)>$/);
+    const pubID = match[1];
+    const msg = match[2];
+    return {
+        pubID,
+        msg
     }
 }

@@ -29,7 +29,8 @@ def extract_values(contents):
         'latency_standard_deviation': re.compile(r'Standard Deviation of Latency:\s+([\d.]+)\s+ms'),
         'latency_variance': re.compile(r'Varience of Latency:\s+([\d.]+)\s+ms'),
         'consistency': re.compile(r'C\s+=\s+([\d.]+)'),
-        'correctness': re.compile(r'K\s+=\s+([\d.]+)')
+        'correctness': re.compile(r'K\s+=\s+([\d.]+)'),
+        'sub_radius': re.compile(r'sub_radius\s+=\s+([\d.]+)')
     }
 
     # Initialize a dictionary to hold the extracted values
@@ -92,6 +93,7 @@ def generate_plots(dataframe, base_path):
         ('latency', 'number_of_clients', 'Latency vs Number of Clients', 'latency_standard_deviation'),
         ('correctness', 'number_of_clients', 'Correctness vs Number of Clients', None),
         ('consistency', 'number_of_clients', 'Consistency vs Number of Clients', None),
+        ('latency', 'sub_radius', 'Latency vs Sub Radius', 'latency_standard_deviation'),
     ]
 
     for y_column, x_column, title, std_dev_column in plots_info:
@@ -104,8 +106,11 @@ def generate_plots(dataframe, base_path):
             plt.fill_between(sorted_dataframe[x_column], sorted_dataframe[y_column] - sorted_dataframe[std_dev_column], sorted_dataframe[y_column] + sorted_dataframe[std_dev_column], color='lightgray', alpha=0.5)
             # Set axis limits and intervals
             plt.xlim([0, dataframe[x_column].max() + 1])  # x-axis limits
-            plt.ylim([0, dataframe[y_column].max() + 20])  # y-axis limits
-            plt.xticks(range(dataframe[x_column].min(), dataframe[x_column].max() + 1, 1))  # x-axis ticks
+            plt.ylim([0, dataframe[y_column].max() + 5])  # y-axis limits
+            if x_column == 'sub_radius':
+                plt.xticks(range(0, dataframe[x_column].max() + 1, 5))
+            else: 
+                plt.xticks(range(dataframe[x_column].min(), dataframe[x_column].max() + 1, 1))  # x-axis ticks
             
             plt.xlabel(x_column.replace('_', ' ').title())
             plt.ylabel(y_column.replace('_', ' ').title())
@@ -128,34 +133,43 @@ def generate_plots(dataframe, base_path):
             plt.grid(True)
             plt.savefig(f"{base_path}/{title.replace(' ', '_')}.png")
             plt.close()
-        
-
 
 
 # Main function
 def main(base_path):
     file_paths = [
-        base_path + '/Output_1.txt',
-        base_path + '/Output_2.txt',
-        base_path + '/Output_3.txt',
-        base_path + '/Output_4.txt',
+        # base_path + '/Output_1.txt',
+        # base_path + '/Output_2.txt',
+        # base_path + '/Output_3.txt',
+        # base_path + '/Output_4.txt',
+        # base_path + '/Output_5.txt',
+        # base_path + '/Output_6.txt',
+        # base_path + '/Output_7.txt',
+        # base_path + '/Output_8.txt',
+        # base_path + '/Output_9.txt',
+        # base_path + '/Output_10.txt',
+        # base_path + '/Output_11.txt',
+        # base_path + '/Output_12.txt',
+        # base_path + '/Output_13.txt',
+        # base_path + '/Output_14.txt',
+        # base_path + '/Output_15.txt',
+        # base_path + '/Output_16.txt',
+        # base_path + '/Output_17.txt',
+        # base_path + '/Output_18.txt',
+        # base_path + '/Output_19.txt',
+        # base_path + '/Output_20.txt',
+        # base_path + '/Output_21.txt',
+
         base_path + '/Output_5.txt',
-        base_path + '/Output_6.txt',
-        base_path + '/Output_7.txt',
-        base_path + '/Output_8.txt',
-        base_path + '/Output_9.txt',
         base_path + '/Output_10.txt',
-        base_path + '/Output_11.txt',
-        base_path + '/Output_12.txt',
-        base_path + '/Output_13.txt',
-        base_path + '/Output_14.txt',
         base_path + '/Output_15.txt',
-        base_path + '/Output_16.txt',
-        base_path + '/Output_17.txt',
-        base_path + '/Output_18.txt',
-        base_path + '/Output_19.txt',
         base_path + '/Output_20.txt',
-        base_path + '/Output_21.txt',
+        base_path + '/Output_25.txt',
+        base_path + '/Output_30.txt',
+        base_path + '/Output_35.txt',
+        base_path + '/Output_40.txt',
+        base_path + '/Output_45.txt',
+        base_path + '/Output_50.txt',
     ]
 
     # Process the files
