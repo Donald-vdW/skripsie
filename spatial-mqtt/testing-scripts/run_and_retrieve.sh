@@ -34,8 +34,8 @@ fi
 if [ -z "$BASE_DIR" ]; then
 
     # BASE_DIR is not set, so define it with your default value
-    # label=$(date "+%Y-%m-%d_%H-%M-%S")
-    label="2023-11-10_16-53-42"
+    label=$(date "+%Y-%m-%d_%H-%M-%S")
+    # label="2023-11-10_16-53-42"
     BASE_DIR="/mnt/d/User/Documents/4th Year/Semester2/Skripsie/TESTS/2/${label}"
     # mkdir -p "${BASE_DIR}"
 
@@ -47,7 +47,7 @@ fi
 
 # Check if radius is already set
 if [ -z "$radius" ]; then
-    radius=15
+    radius=25
     BASE_DIR="/mnt/d/User/Documents/4th Year/Semester2/Skripsie/TESTS/2/${label}/radius-${radius}"
     mkdir -p "${BASE_DIR}"
 
@@ -70,7 +70,8 @@ rm -f ~/spatial-mqtt/mqtt-on-vast/logs_and_events/*
 echo "Starting brokers..."
 for BROKER in "${BROKERS[@]}"; do
     echo "Starting broker on $BROKER..."
-    (ssh $BROKER "cd ~/spatial-mqtt/mqtt-on-vast/ && rm -rf logs_and_events && nohup node gateway.js > output.log 2> error.log" &) 2>/dev/null
+    (ssh $BROKER "cd ~/spatial-mqtt/mqtt-on-vast/ && rm -rf logs_and_events && nohup node examples/gateway.js > output.log 2> error.log" &) 2>/dev/null
+    # (ssh $BROKER "cd ~/spatial-mqtt/mqtt-on-vast/ && rm -rf logs_and_events && nohup node broker.js > output.log 2> error.log" &) 2>/dev/null
     echo $!
 done
 sleep 2
@@ -81,7 +82,8 @@ for CLIENT in "${CLIENTS[@]}"; do
     echo "Starting node script on $CLIENT..."
     # ssh $CLIENT "cd ~/spatial-mqtt/mqtt-on-vast/ && rm -rf logs_and_events && nohup node normalRate.js > output.log 2> error.log" &
     # ssh $CLIENT "cd ~/spatial-mqtt/mqtt-on-vast/ && rm -rf logs_and_events && nohup node spatial-client.js > output.log 2> error.log" &
-    ssh $CLIENT "cd ~/spatial-mqtt/mqtt-on-vast/ && rm -rf logs_and_events && nohup node organised.js $radius > output.log 2> error.log" &
+    ssh $CLIENT "cd ~/spatial-mqtt/mqtt-on-vast/ && rm -rf logs_and_events && nohup node examples/organised.js $radius > output.log 2> error.log" &
+    # ssh $CLIENT "cd ~/spatial-mqtt/mqtt-on-vast/ && rm -rf logs_and_events && nohup node normal-topic.js > output.log 2> error.log" &
 done
 
 sleep 2
@@ -89,7 +91,8 @@ sleep 2
 # Start spTest.js on your PC and wait for it to finish
 echo "Starting spTest.js on PC..."
 cd ~/spatial-mqtt/mqtt-on-vast/
-node ~/spatial-mqtt/mqtt-on-vast/spTest.js &
+node ~/spatial-mqtt/mqtt-on-vast/examples/spTest.js &
+# node ~/spatial-mqtt/mqtt-on-vast/nspTest.js &
 wait $!
 sleep 2
 
@@ -146,7 +149,7 @@ rsync -avz ~/spatial-mqtt/mqtt-on-vast/logs_and_events/Client_events.txt "${FILE
 OUTPUT_FILE="${BASE_DIR}/Output_${NUM_CLIENTS}.txt"
 
 # Run the python script with the constructed filename and redirect output
-python3 ~/spatial-mqtt/mqtt-on-vast/analysis/fromScratch.py "$FILE_NAME" > "$OUTPUT_FILE" &
+python3 ~/spatial-mqtt/mqtt-on-vast/analysis/ClientEventParser.py "$FILE_NAME" > "$OUTPUT_FILE" &
 
 # Inform the user that the operation is complete for this file
 echo "Processed $FILE_NAME and saved output to $OUTPUT_FILE"

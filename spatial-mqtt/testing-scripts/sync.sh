@@ -31,16 +31,14 @@ DEVICES=(
 for DEVICE in "${DEVICES[@]}"; do
     NUMBER=$(echo $DEVICE | cut -d'.' -f4)
 
-    sed -i.bak "s/const _alias = \`C1\`/const _alias = \`C$NUMBER\`/" ~/spatial-mqtt/mqtt-on-vast/spatial-client.js
-    sed -i.bak "s/const _alias = \`C1\`/const _alias = \`C$NUMBER\`/" ~/spatial-mqtt/mqtt-on-vast/normalRate.js 
-    sed -i.bak "s/const _alias = \`C1\`/const _alias = \`C$NUMBER\`/" ~/spatial-mqtt/mqtt-on-vast/organised.js
+    sed -i.bak "s/const _alias = \`C1\`/const _alias = \`C$NUMBER\`/" ~/spatial-mqtt/mqtt-on-vast/examples/organised.js
+    sed -i.bak "s/const _alias = \`C1\`/const _alias = \`C$NUMBER\`/" ~/spatial-mqtt/mqtt-on-vast/examples/normal-topic.js
 
     rsync -avz --delete --exclude='**/node_modules/' --exclude='**/logs_and_events/' ~/spatial-mqtt/mqtt-on-vast/ $DEVICE:~/spatial-mqtt/mqtt-on-vast/
     rsync -avz --delete --exclude='**/node_modules/' --exclude='**/logs_and_events/' ~/repos/ $DEVICE:~/repos/
     # Correcting the file name here:
-    mv ~/spatial-mqtt/mqtt-on-vast/spatial-client.js.bak ~/spatial-mqtt/mqtt-on-vast/spatial-client.js
-    mv ~/spatial-mqtt/mqtt-on-vast/normalRate.js.bak ~/spatial-mqtt/mqtt-on-vast/normalRate.js
-    mv ~/spatial-mqtt/mqtt-on-vast/organised.js.bak ~/spatial-mqtt/mqtt-on-vast/organised.js
+    mv ~/spatial-mqtt/mqtt-on-vast/examples/organised.js.bak ~/spatial-mqtt/mqtt-on-vast/examples/organised.js
+    mv ~/spatial-mqtt/mqtt-on-vast/examples/normal-topic.js.bak ~/spatial-mqtt/mqtt-on-vast/examples/normal-topic.js
 
 done
 
